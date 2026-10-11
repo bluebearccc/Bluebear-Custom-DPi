@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'src/**'
+    tags:
+      - 'v*'
   pull_request:
     paths:
       - 'src/**'
@@ -14,6 +16,9 @@ env:
   WINDIVERT_NAME: WinDivert-2.2.0-D.zip
   WINDIVERT_BASENAME: WinDivert-2.2.0-D
   WINDIVERT_SHA256: 1d461cfdfa7ba88ebcfbb3603b71b703e9f72aba8aeff99a75ce293e6f89d2ba
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -79,3 +84,18 @@ jobs:
         with:
           name: goodbyedpi_x86_${{ steps.vars.outputs.sha_short }}
           path: goodbyedpi_x86_${{ steps.vars.outputs.sha_short }}
+
+      - name: Zip release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          zip -r goodbyedpi_x86_64.zip goodbyedpi_x86_64_${{ steps.vars.outputs.sha_short }}
+          zip -r goodbyedpi_x86.zip goodbyedpi_x86_${{ steps.vars.outputs.sha_short }}
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            goodbyedpi_x86_64.zip
+            goodbyedpi_x86.zip
